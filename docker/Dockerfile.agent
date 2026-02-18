@@ -1,0 +1,20 @@
+FROM node:20-slim
+
+# Install Claude Code CLI (required by the Agent SDK)
+RUN npm install -g @anthropic-ai/claude-code
+
+WORKDIR /app
+
+# Copy package files
+COPY package.json yarn.lock ./
+RUN corepack enable && yarn install --immutable
+
+# Copy built source
+COPY dist/ ./dist/
+
+# Non-root user
+RUN useradd -m -d /home/agent agent
+USER agent
+
+# The agent process runs indefinitely, waiting for tasks
+CMD ["node", "dist/agent/index.js"]

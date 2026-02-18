@@ -1,0 +1,156 @@
+version: "3.9"
+
+volumes:
+  shared-data:
+  redis-data:
+
+networks:
+  agent-net:
+    internal: true
+  gateway-net:
+
+services:
+  redis:
+    image: redis:7-alpine
+    volumes:
+      - redis-data:/data
+    networks:
+      - agent-net
+    restart: unless-stopped
+
+  orchestrator:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.orchestrator
+    ports:
+      - "127.0.0.1:3000:3000"
+    volumes:
+      - shared-data:/data
+    environment:
+      - CLAUDE_CODE_USE_BEDROCK=1
+      - AWS_REGION=${AWS_REGION}
+      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
+      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
+      - REDIS_URL=redis://redis:6379
+      - DATA_DIR=/data
+    networks:
+      - agent-net
+      - gateway-net
+    depends_on:
+      - redis
+    restart: unless-stopped
+
+  agent-analyst:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.agent
+    environment:
+      - AGENT_ROLE=analyst
+      - AGENT_ID=analyst-01
+      - CLAUDE_CODE_USE_BEDROCK=1
+      - AWS_REGION=${AWS_REGION}
+      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
+      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
+      - REDIS_URL=redis://redis:6379
+      - DATA_DIR=/data
+      - ANTHROPIC_MODEL=us.anthropic.claude-sonnet-4-5-20250929-v1:0
+    volumes:
+      - shared-data:/data
+    networks:
+      - agent-net
+    depends_on:
+      - redis
+      - orchestrator
+    restart: unless-stopped
+
+  agent-pm:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.agent
+    environment:
+      - AGENT_ROLE=product-manager
+      - AGENT_ID=pm-01
+      - CLAUDE_CODE_USE_BEDROCK=1
+      - AWS_REGION=${AWS_REGION}
+      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
+      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
+      - REDIS_URL=redis://redis:6379
+      - DATA_DIR=/data
+      - ANTHROPIC_MODEL=us.anthropic.claude-sonnet-4-5-20250929-v1:0
+    volumes:
+      - shared-data:/data
+    networks:
+      - agent-net
+    depends_on:
+      - redis
+      - orchestrator
+    restart: unless-stopped
+
+  agent-architect:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.agent
+    environment:
+      - AGENT_ROLE=architect
+      - AGENT_ID=architect-01
+      - CLAUDE_CODE_USE_BEDROCK=1
+      - AWS_REGION=${AWS_REGION}
+      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
+      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
+      - REDIS_URL=redis://redis:6379
+      - DATA_DIR=/data
+      - ANTHROPIC_MODEL=us.anthropic.claude-sonnet-4-5-20250929-v1:0
+    volumes:
+      - shared-data:/data
+    networks:
+      - agent-net
+    depends_on:
+      - redis
+      - orchestrator
+    restart: unless-stopped
+
+  agent-developer:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.agent
+    environment:
+      - AGENT_ROLE=developer
+      - AGENT_ID=dev-01
+      - CLAUDE_CODE_USE_BEDROCK=1
+      - AWS_REGION=${AWS_REGION}
+      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
+      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
+      - REDIS_URL=redis://redis:6379
+      - DATA_DIR=/data
+      - ANTHROPIC_MODEL=us.anthropic.claude-sonnet-4-5-20250929-v1:0
+    volumes:
+      - shared-data:/data
+    networks:
+      - agent-net
+    depends_on:
+      - redis
+      - orchestrator
+    restart: unless-stopped
+
+  agent-qa:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.agent
+    environment:
+      - AGENT_ROLE=qa
+      - AGENT_ID=qa-01
+      - CLAUDE_CODE_USE_BEDROCK=1
+      - AWS_REGION=${AWS_REGION}
+      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
+      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
+      - REDIS_URL=redis://redis:6379
+      - DATA_DIR=/data
+      - ANTHROPIC_MODEL=us.anthropic.claude-haiku-4-5-20251001-v1:0
+    volumes:
+      - shared-data:/data
+    networks:
+      - agent-net
+    depends_on:
+      - redis
+      - orchestrator
+    restart: unless-stopped
