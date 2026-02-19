@@ -17,20 +17,30 @@ export function Dashboard() {
   const [showForm, setShowForm] = useState(false);
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
+  const [contextFiles, setContextFiles] = useState<File[]>([]);
 
   const handleCreate = () => {
     if (name && description) {
       createProject.mutate(
-        { name, description },
+        { name, description, contextFiles },
         {
           onSuccess: () => {
             setShowForm(false);
             setName("");
             setDescription("");
+            setContextFiles([]);
           },
         }
       );
     }
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setContextFiles(Array.from(e.target.files ?? []));
+  };
+
+  const removeFile = (index: number) => {
+    setContextFiles((prev) => prev.filter((_, i) => i !== index));
   };
 
   return (
@@ -72,6 +82,39 @@ export function Dashboard() {
             rows={4}
             className="w-full bg-gray-800 rounded px-3 py-2 text-sm border border-gray-700 focus:border-blue-500 outline-none mb-3 resize-none"
           />
+          <div className="mb-3">
+            <label className="block text-xs text-gray-400 mb-1.5">
+              Context files <span className="text-gray-600">(optional — docs, specs, existing code)</span>
+            </label>
+            <label className="flex items-center gap-2 w-full cursor-pointer bg-gray-800 hover:bg-gray-750 border border-dashed border-gray-600 hover:border-gray-500 rounded px-3 py-2 text-sm text-gray-400 transition-colors">
+              <svg className="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
+              </svg>
+              <span>{contextFiles.length > 0 ? "Add more files" : "Attach files"}</span>
+              <input
+                type="file"
+                multiple
+                className="hidden"
+                onChange={handleFileChange}
+              />
+            </label>
+            {contextFiles.length > 0 && (
+              <ul className="mt-2 space-y-1">
+                {contextFiles.map((file, i) => (
+                  <li key={i} className="flex items-center justify-between text-xs text-gray-300 bg-gray-800 rounded px-2 py-1">
+                    <span className="truncate">{file.name}</span>
+                    <button
+                      type="button"
+                      onClick={() => removeFile(i)}
+                      className="ml-2 text-gray-500 hover:text-red-400 shrink-0"
+                    >
+                      ✕
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
           <div className="flex gap-2 justify-end">
             <button
               onClick={() => setShowForm(false)}

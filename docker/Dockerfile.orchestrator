@@ -2,16 +2,18 @@ FROM node:20-slim
 
 WORKDIR /app
 
-# Copy package files
-COPY package.json yarn.lock ./
+# Copy package files and Yarn config
+COPY package.json yarn.lock .yarnrc.yml ./
+COPY .yarn ./.yarn
+
+# Install dependencies with Yarn 4
 RUN corepack enable && yarn install --immutable
 
 # Copy built source
 COPY dist/ ./dist/
 
-# Non-root user
-RUN useradd -m -d /home/orch orch
-USER orch
+# Run as root to allow writing to /data volume
+# In production, you'd want to properly set volume ownership
 
 EXPOSE 3000
 

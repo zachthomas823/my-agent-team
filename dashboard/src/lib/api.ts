@@ -1,9 +1,10 @@
 const API_BASE = "/api";
 
 async function fetchJSON<T>(path: string, init?: RequestInit): Promise<T> {
+  const { headers: extraHeaders, ...rest } = init ?? {};
   const res = await fetch(`${API_BASE}${path}`, {
-    headers: { "Content-Type": "application/json" },
-    ...init,
+    headers: { "Content-Type": "application/json", ...extraHeaders },
+    ...rest,
   });
   if (!res.ok) {
     const body = await res.json().catch(() => ({ error: res.statusText }));
@@ -17,11 +18,19 @@ export const api = {
 
   getProject: (id: string) => fetchJSON<ProjectDetail>(`/projects/${id}`),
 
-  createProject: (name: string, description: string) =>
-    fetchJSON<{ id: string; status: string }>("/projects", {
+  createProject: (name: string, description: string, contextFiles: File[] = []) => {
+    const form = new FormData();
+    form.append("name", name);
+    form.append("description", description);
+    for (const file of contextFiles) {
+      form.append("context_files", file);
+    }
+    return fetchJSON<{ id: string; status: string; context_files: number }>("/projects", {
       method: "POST",
-      body: JSON.stringify({ name, description }),
-    }),
+      headers: {}, // let browser set Content-Type with boundary
+      body: form,
+    });
+  },
 
   getProjectEvents: (id: string) =>
     fetchJSON<ProjectEvent[]>(`/projects/${id}/events`),

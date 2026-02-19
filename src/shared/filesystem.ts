@@ -12,6 +12,7 @@ const PROJECT_SUBDIRS = [
   "qa/test-results",
   "conversations",
   "handoffs/blocks",
+  "context",
 ];
 
 /**

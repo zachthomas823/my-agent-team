@@ -33,10 +33,12 @@ export function useCreateProject() {
     mutationFn: ({
       name,
       description,
+      contextFiles,
     }: {
       name: string;
       description: string;
-    }) => api.createProject(name, description),
+      contextFiles?: File[];
+    }) => api.createProject(name, description, contextFiles),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["projects"] });
     },
