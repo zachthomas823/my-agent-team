@@ -1,4 +1,4 @@
-import { mkdir, readFile, writeFile, readdir, stat } from "fs/promises";
+import { mkdir, chmod, readFile, writeFile, readdir, rm, stat } from "fs/promises";
 import { join, dirname } from "path";
 
 const PROJECT_SUBDIRS = [
@@ -15,6 +15,18 @@ const PROJECT_SUBDIRS = [
   "context",
 ];
 
+async function chmodRecursive(dirPath: string, mode: number): Promise<void> {
+  await chmod(dirPath, mode);
+  const entries = await readdir(dirPath, { withFileTypes: true });
+  for (const entry of entries) {
+    const fullPath = join(dirPath, entry.name);
+    await chmod(fullPath, mode);
+    if (entry.isDirectory()) {
+      await chmodRecursive(fullPath, mode);
+    }
+  }
+}
+
 /**
  * Creates the full directory structure for a new project.
  */
@@ -22,6 +34,8 @@ export async function initializeProjectDir(projectPath: string): Promise<void> {
   for (const subdir of PROJECT_SUBDIRS) {
     await mkdir(join(projectPath, subdir), { recursive: true });
   }
+  // Make the entire project tree world-writable so non-root agent containers can write artifacts.
+  await chmodRecursive(projectPath, 0o777);
 
   // Create project.json metadata file
   const projectJson = {
@@ -35,6 +49,13 @@ export async function initializeProjectDir(projectPath: string): Promise<void> {
     JSON.stringify(projectJson, null, 2),
     "utf-8"
   );
+}
+
+/**
+ * Recursively deletes a project directory.
+ */
+export async function deleteProjectDir(projectPath: string): Promise<void> {
+  await rm(projectPath, { recursive: true, force: true });
 }
 
 /**

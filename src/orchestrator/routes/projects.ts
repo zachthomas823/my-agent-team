@@ -1,8 +1,8 @@
 import type { Express } from "express";
 import multer from "multer";
 import { join } from "path";
-import { rename } from "fs/promises";
-import { initializeProjectDir } from "../../shared/filesystem.js";
+import { copyFile, unlink } from "fs/promises";
+import { initializeProjectDir, deleteProjectDir } from "../../shared/filesystem.js";
 import { getWorkflowState } from "../workflow.js";
 import type { AppDeps, ProjectRow, EventRow, CreateProjectBody } from "../types.js";
 
@@ -41,7 +41,8 @@ export function registerProjectRoutes(app: Express, deps: AppDeps): void {
       const uploadedFiles = (req.files as Express.Multer.File[]) ?? [];
       for (const file of uploadedFiles) {
         const dest = join(projectDir, "context", file.originalname);
-        await rename(file.path, dest);
+        await copyFile(file.path, dest);
+        await unlink(file.path);
       }
 
       db.prepare(
@@ -95,6 +96,33 @@ export function registerProjectRoutes(app: Express, deps: AppDeps): void {
 
     const workflow = getWorkflowState(req.params.id, db);
     res.json({ ...project, workflow });
+  });
+
+  // Delete a project (DB rows + filesystem)
+  app.delete("/api/projects/:id", async (req, res) => {
+    try {
+      const project = db
+        .prepare("SELECT id FROM projects WHERE id = ?")
+        .get(req.params.id);
+      if (!project) {
+        res.status(404).json({ error: "Project not found" });
+        return;
+      }
+
+      // Remove DB rows
+      db.prepare("DELETE FROM events WHERE project_id = ?").run(req.params.id);
+      db.prepare("DELETE FROM blockers WHERE project_id = ?").run(req.params.id);
+      db.prepare("DELETE FROM cost_log WHERE project_id = ?").run(req.params.id);
+      db.prepare("DELETE FROM projects WHERE id = ?").run(req.params.id);
+
+      // Remove files
+      await deleteProjectDir(`${dataDir}/projects/${req.params.id}`);
+
+      res.json({ status: "deleted" });
+    } catch (error) {
+      console.error("Error deleting project:", error);
+      res.status(500).json({ error: "Failed to delete project" });
+    }
   });
 
   // Get event stream for a project

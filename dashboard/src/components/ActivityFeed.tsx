@@ -44,7 +44,7 @@ export function ActivityFeed({ projectId }: { projectId: string }) {
                 className="flex items-start gap-2 text-xs"
               >
                 <span className="text-gray-600 shrink-0 w-16">
-                  {new Date(event.created_at).toLocaleTimeString([], {
+                  {new Date(event.created_at.includes("T") ? event.created_at : event.created_at.replace(" ", "T") + "Z").toLocaleTimeString([], {
                     hour: "2-digit",
                     minute: "2-digit",
                   })}

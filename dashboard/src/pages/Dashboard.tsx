@@ -1,7 +1,9 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import { useProjects, useCreateProject } from "../hooks/useProject";
+import { useProjects, useCreateProject, useDeleteProject } from "../hooks/useProject";
 import { useWebSocket } from "../hooks/useWebSocket";
+import { useToast } from "../hooks/useToast";
+import { Toaster } from "../components/Toaster";
 
 const STATUS_BADGES: Record<string, string> = {
   active: "bg-green-900/50 text-green-400",
@@ -13,30 +15,64 @@ const STATUS_BADGES: Record<string, string> = {
 export function Dashboard() {
   const { data: projects, isLoading } = useProjects();
   const createProject = useCreateProject();
+  const deleteProject = useDeleteProject();
   const { connected } = useWebSocket();
+  const { toasts, toast, dismiss } = useToast();
   const [showForm, setShowForm] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
+
+  const handleDelete = (e: React.MouseEvent, projectId: string, projectName: string) => {
+    e.preventDefault();
+    if (confirmDelete === projectId) {
+      deleteProject.mutate(projectId, {
+        onSuccess: () => {
+          toast(`Project "${projectName}" deleted`, "success");
+          setConfirmDelete(null);
+        },
+        onError: (err) => {
+          toast(`Failed to delete: ${err.message}`, "error");
+          setConfirmDelete(null);
+        },
+      });
+    } else {
+      setConfirmDelete(projectId);
+    }
+  };
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [contextFiles, setContextFiles] = useState<File[]>([]);
 
   const handleCreate = () => {
-    if (name && description) {
-      createProject.mutate(
-        { name, description, contextFiles },
-        {
-          onSuccess: () => {
-            setShowForm(false);
-            setName("");
-            setDescription("");
-            setContextFiles([]);
-          },
-        }
-      );
-    }
+    if (!name || !description) return;
+    console.info("[dashboard] creating project", { name, contextFiles: contextFiles.length });
+    createProject.mutate(
+      { name, description, contextFiles },
+      {
+        onSuccess: (data) => {
+          console.info("[dashboard] project created", data);
+          toast(
+            contextFiles.length > 0
+              ? `Project "${name}" created with ${contextFiles.length} context file(s)`
+              : `Project "${name}" created`,
+            "success"
+          );
+          setShowForm(false);
+          setName("");
+          setDescription("");
+          setContextFiles([]);
+        },
+        onError: (err) => {
+          console.error("[dashboard] project creation failed", err);
+          toast(`Failed to create project: ${err.message}`, "error");
+        },
+      }
+    );
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setContextFiles(Array.from(e.target.files ?? []));
+    const incoming = Array.from(e.target.files ?? []);
+    setContextFiles((prev) => [...prev, ...incoming]);
+    e.target.value = ""; // reset so the same file can be re-selected
   };
 
   const removeFile = (index: number) => {
@@ -44,6 +80,8 @@ export function Dashboard() {
   };
 
   return (
+    <>
+    <Toaster toasts={toasts} onDismiss={dismiss} />
     <div className="max-w-4xl mx-auto p-6">
       <div className="flex items-center justify-between mb-8">
         <div>
@@ -143,31 +181,46 @@ export function Dashboard() {
           </p>
         </div>
       ) : (
-        <div className="space-y-3">
+        <div className="space-y-3" onClick={(e) => { if ((e.target as HTMLElement).closest("button") === null) setConfirmDelete(null); }}>
           {projects.map((project) => (
-            <Link
-              key={project.id}
-              to={`/projects/${project.id}`}
-              className="block bg-gray-900 hover:bg-gray-800 rounded-lg p-4 transition-colors"
-            >
-              <div className="flex items-center justify-between">
-                <div>
-                  <h3 className="font-semibold text-white">{project.name}</h3>
-                  <p className="text-xs text-gray-400 mt-1">
-                    Phase: {project.current_phase} &middot; Created{" "}
-                    {new Date(project.created_at).toLocaleDateString()}
-                  </p>
+            <div key={project.id} className="relative group">
+              <Link
+                to={`/projects/${project.id}`}
+                className="block bg-gray-900 hover:bg-gray-800 rounded-lg p-4 transition-colors"
+                onClick={() => setConfirmDelete(null)}
+              >
+                <div className="flex items-center justify-between pr-8">
+                  <div>
+                    <h3 className="font-semibold text-white">{project.name}</h3>
+                    <p className="text-xs text-gray-400 mt-1">
+                      Phase: {project.current_phase} &middot; Created{" "}
+                      {new Date(project.created_at.includes("T") ? project.created_at : project.created_at.replace(" ", "T") + "Z").toLocaleDateString()}
+                    </p>
+                  </div>
+                  <span
+                    className={`px-2.5 py-1 rounded-full text-xs font-medium ${STATUS_BADGES[project.status] || STATUS_BADGES.active}`}
+                  >
+                    {project.status}
+                  </span>
                 </div>
-                <span
-                  className={`px-2.5 py-1 rounded-full text-xs font-medium ${STATUS_BADGES[project.status] || STATUS_BADGES.active}`}
-                >
-                  {project.status}
-                </span>
-              </div>
-            </Link>
+              </Link>
+              <button
+                onClick={(e) => handleDelete(e, project.id, project.name)}
+                disabled={deleteProject.isPending && confirmDelete === project.id}
+                className={`absolute top-3 right-3 text-xs px-1.5 py-0.5 rounded border transition-colors ${
+                  confirmDelete === project.id
+                    ? "bg-red-700 hover:bg-red-600 border-red-600 text-white"
+                    : "bg-transparent border-gray-700 text-gray-600 hover:border-red-700 hover:text-red-400 opacity-0 group-hover:opacity-100"
+                }`}
+                title={confirmDelete === project.id ? "Click again to confirm" : "Delete project"}
+              >
+                {confirmDelete === project.id ? "Confirm?" : "✕"}
+              </button>
+            </div>
           ))}
         </div>
       )}
     </div>
+    </>
   );
 }

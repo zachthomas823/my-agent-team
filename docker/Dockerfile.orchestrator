@@ -12,9 +12,11 @@ RUN corepack enable && yarn install --immutable
 # Copy built source
 COPY dist/ ./dist/
 
-# Run as root to allow writing to /data volume
-# In production, you'd want to properly set volume ownership
+# Entrypoint ensures /data volume is writable by non-root agent containers
+COPY docker/entrypoint.orchestrator.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
 
 EXPOSE 3000
 
+ENTRYPOINT ["/entrypoint.sh"]
 CMD ["node", "dist/orchestrator/index.js"]

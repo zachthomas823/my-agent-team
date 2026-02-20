@@ -6,3 +6,5 @@ data/projects/
 .yarn/
 .pnp.*
 *.tsbuildinfo
+.claude-bedrock/settings.json
+.claude/settings.local.json

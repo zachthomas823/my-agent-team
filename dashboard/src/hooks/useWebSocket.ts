@@ -19,19 +19,28 @@ export function useWebSocket() {
     const wsUrl = `${protocol}//${window.location.host}/ws`;
     ws.current = new WebSocket(wsUrl);
 
-    ws.current.onopen = () => setConnected(true);
+    ws.current.onopen = () => {
+      console.info("[ws] connected", wsUrl);
+      setConnected(true);
+    };
     ws.current.onclose = () => {
+      console.warn("[ws] disconnected — retrying in 3s");
       setConnected(false);
       setTimeout(connect, 3000);
+    };
+    ws.current.onerror = (err) => {
+      console.error("[ws] error", err);
     };
 
     ws.current.onmessage = (e) => {
       try {
         const event: AgentEvent = JSON.parse(e.data);
+        console.debug(`[ws] event: ${event.type}`, event);
         setEvents((prev) => [event, ...prev].slice(0, 200));
 
         queryClient.invalidateQueries({ queryKey: ["projects"] });
         queryClient.invalidateQueries({ queryKey: ["blockers"] });
+        queryClient.invalidateQueries({ queryKey: ["agent-status"] });
         if (event.project_id) {
           queryClient.invalidateQueries({
             queryKey: ["project", event.project_id],

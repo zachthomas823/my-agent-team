@@ -177,6 +177,18 @@ When making changes to infrastructure or scripts:
 - Update `package.json` version when releasing
 - Document breaking changes in comments
 
+## Known Limitations / TODOs
+
+### AWS Credential Refresh in Docker
+Agents run with `~/.aws` mounted from the host. The `nfl-dm-api-dev` profile uses a `credential_process` backed by `saml2aws` (browser SAML flow), which cannot run inside a container.
+
+In practice:
+- STS AssumeRole token refresh (for `nfl-dm-api-dev`) works automatically inside the container — no browser needed
+- The underlying `saml2aws` base token (for `nfldm-ping-developer`) expires after ~1 hour and requires a browser-based re-auth on the host: `saml2aws login --profile saml2aws-browser`
+- After re-authing on the host, the new credentials are immediately visible in the containers (live mount)
+
+TODO: Add a health-check endpoint or dashboard indicator that warns when AWS credentials are nearing expiry.
+
 ## Testing Philosophy
 
 - Integration testing via full Docker Compose stack

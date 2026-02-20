@@ -14,7 +14,13 @@ CRITICAL BEHAVIORS:
 - If you need human input, create a block file at handoffs/blocks/ and use the create_blocker tool
 - Do NOT stop to ask permission — work autonomously until blocked
 - Use the notify_orchestrator tool when you complete work or hit a blocker
-- Read templates from the templates directory for document format guidance`,
+- Read templates from the templates directory for document format guidance
+
+IMPORTANT: At the very start of your task, before reading any files:
+1. Call report_plan with a list of the steps you intend to take (e.g. ["Read project context", "Research market", "Write project brief", "Create handoff"])
+
+When you complete your work, before calling notify_orchestrator:
+2. Call report_summary with what you did, which files you produced, and key decisions made`,
       allowedTools: [
         "Read",
         "Write",
@@ -24,6 +30,8 @@ CRITICAL BEHAVIORS:
         "Bash",
         "mcp__orchestrator__notify_orchestrator",
         "mcp__orchestrator__create_blocker",
+        "mcp__orchestrator__report_plan",
+        "mcp__orchestrator__report_summary",
       ],
       produces: ["project-brief", "market-research"],
       consumes: [],
@@ -43,7 +51,13 @@ CRITICAL BEHAVIORS:
 - If the brief has ambiguities, try to resolve them yourself first
 - Only create a blocker if you genuinely cannot proceed without human input
 - Use the notify_orchestrator tool when you complete work or hit a blocker
-- Read templates from the templates directory for document format guidance`,
+- Read templates from the templates directory for document format guidance
+
+IMPORTANT: At the very start of your task, before reading any files:
+1. Call report_plan with a list of the steps you intend to take (e.g. ["Read analyst handoff", "Read project brief", "Write PRD", "Create epics and stories", "Create handoff"])
+
+When you complete your work, before calling notify_orchestrator:
+2. Call report_summary with what you did, which files you produced, and key decisions made`,
       allowedTools: [
         "Read",
         "Write",
@@ -52,6 +66,8 @@ CRITICAL BEHAVIORS:
         "Grep",
         "mcp__orchestrator__notify_orchestrator",
         "mcp__orchestrator__create_blocker",
+        "mcp__orchestrator__report_plan",
+        "mcp__orchestrator__report_summary",
       ],
       produces: ["prd", "epics", "stories"],
       consumes: ["project-brief"],
@@ -71,7 +87,13 @@ CRITICAL BEHAVIORS:
 - Create a handoff at handoffs/architect-to-dev.md when done
 - If the PRD has gaps that block architecture decisions, create a blocker
 - Use the notify_orchestrator tool when you complete work or hit a blocker
-- Read templates from the templates directory for document format guidance`,
+- Read templates from the templates directory for document format guidance
+
+IMPORTANT: At the very start of your task, before reading any files:
+1. Call report_plan with a list of the steps you intend to take (e.g. ["Read PM handoff", "Read PRD and brief", "Design architecture", "Write ADRs", "Create diagrams", "Create handoff"])
+
+When you complete your work, before calling notify_orchestrator:
+2. Call report_summary with what you did, which files you produced, and key decisions made`,
       allowedTools: [
         "Read",
         "Write",
@@ -81,6 +103,8 @@ CRITICAL BEHAVIORS:
         "Bash",
         "mcp__orchestrator__notify_orchestrator",
         "mcp__orchestrator__create_blocker",
+        "mcp__orchestrator__report_plan",
+        "mcp__orchestrator__report_summary",
       ],
       produces: ["architecture-doc", "adrs"],
       consumes: ["prd", "project-brief"],
@@ -99,7 +123,13 @@ CRITICAL BEHAVIORS:
 - Follow the coding standards in the knowledge base
 - Implement one story at a time, writing tests for each
 - Use the notify_orchestrator tool when stories are complete
-- If a story is unclear, check with the PM via create_blocker before guessing`,
+- If a story is unclear, check with the PM via create_blocker before guessing
+
+IMPORTANT: At the very start of your task, before reading any files:
+1. Call report_plan with a list of the steps you intend to take (e.g. ["Read architect handoff", "Read architecture and stories", "Set up project structure", "Implement story 1", "Write tests", "Create handoff"])
+
+When you complete your work, before calling notify_orchestrator:
+2. Call report_summary with what you did, which files you produced, and key decisions made`,
       allowedTools: [
         "Read",
         "Write",
@@ -109,6 +139,8 @@ CRITICAL BEHAVIORS:
         "Bash",
         "mcp__orchestrator__notify_orchestrator",
         "mcp__orchestrator__create_blocker",
+        "mcp__orchestrator__report_plan",
+        "mcp__orchestrator__report_summary",
       ],
       produces: ["code", "tests"],
       consumes: ["architecture-doc", "stories", "prd"],
@@ -125,7 +157,13 @@ CRITICAL BEHAVIORS:
 - When asked to review code, check for missing tests, security issues, and deviations from the architecture
 - Write review reports to qa/
 - Create blockers for any critical issues found
-- Use the notify_orchestrator tool with your findings`,
+- Use the notify_orchestrator tool with your findings
+
+IMPORTANT: At the very start of your task, before reading any files:
+1. Call report_plan with a list of the steps you intend to take (e.g. ["Read developer handoff", "Review implementation", "Check test coverage", "Write QA report", "Report findings"])
+
+When you complete your work, before calling notify_orchestrator:
+2. Call report_summary with what you did, which files you produced, and key decisions made`,
       allowedTools: [
         "Read",
         "Glob",
@@ -133,6 +171,8 @@ CRITICAL BEHAVIORS:
         "Write",
         "mcp__orchestrator__notify_orchestrator",
         "mcp__orchestrator__create_blocker",
+        "mcp__orchestrator__report_plan",
+        "mcp__orchestrator__report_summary",
       ],
       produces: ["test-plan", "review-report"],
       consumes: ["prd", "architecture-doc", "code"],

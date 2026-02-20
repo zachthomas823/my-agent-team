@@ -1,16 +1,28 @@
 const API_BASE = "/api";
 
 async function fetchJSON<T>(path: string, init?: RequestInit): Promise<T> {
+  const method = init?.method ?? "GET";
+  const isFormData = init?.body instanceof FormData;
   const { headers: extraHeaders, ...rest } = init ?? {};
+  const defaultHeaders: Record<string, string> = isFormData ? {} : { "Content-Type": "application/json" };
+
+  console.debug(`[api] ${method} ${path}`);
+
   const res = await fetch(`${API_BASE}${path}`, {
-    headers: { "Content-Type": "application/json", ...extraHeaders },
+    headers: { ...defaultHeaders, ...extraHeaders },
     ...rest,
   });
+
   if (!res.ok) {
     const body = await res.json().catch(() => ({ error: res.statusText }));
-    throw new Error(body.error || `HTTP ${res.status}`);
+    const message = body.error || `HTTP ${res.status}`;
+    console.error(`[api] ${method} ${path} → ${res.status}`, message);
+    throw new Error(message);
   }
-  return res.json();
+
+  const data = await res.json();
+  console.debug(`[api] ${method} ${path} → ${res.status}`, data);
+  return data;
 }
 
 export const api = {
@@ -31,6 +43,9 @@ export const api = {
       body: form,
     });
   },
+
+  deleteProject: (id: string) =>
+    fetchJSON<{ status: string }>(`/projects/${id}`, { method: "DELETE" }),
 
   getProjectEvents: (id: string) =>
     fetchJSON<ProjectEvent[]>(`/projects/${id}/events`),
@@ -66,6 +81,14 @@ export const api = {
       size?: number;
       modified?: string;
     }>(`/projects/${projectId}/artifacts/${path}`),
+
+  /** Returns the URL for downloading a single artifact file (use with <a href> or window.open). */
+  getArtifactDownloadUrl: (projectId: string, artifactPath: string) =>
+    `${API_BASE}/projects/${projectId}/artifacts-download/${artifactPath}`,
+
+  /** Returns the URL for downloading all project artifacts as a ZIP. */
+  getArtifactsZipUrl: (projectId: string) =>
+    `${API_BASE}/projects/${projectId}/artifacts-zip`,
 };
 
 // Types
@@ -117,7 +140,16 @@ export interface AgentStatus {
   agent_id: string;
   role: string;
   status: "idle" | "working" | "blocked";
-  last_event: { type: string; created_at: string } | null;
+  last_event: {
+    type: string;
+    created_at: string;
+    tool: string | null;
+    message: string | null;
+    result_summary: string | null;
+    error: string | null;
+    next_agent: string | null;
+    project_id: string | null;
+  } | null;
 }
 
 export interface FileTreeNode {

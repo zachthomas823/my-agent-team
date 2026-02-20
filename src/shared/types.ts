@@ -45,7 +45,9 @@ export type AgentEventType =
   | "blocker_created"
   | "handoff_ready"
   | "review_needed"
-  | "cost_reported";
+  | "cost_reported"
+  | "agent_plan"
+  | "agent_summary";
 
 export interface AgentEvent {
   type: AgentEventType;
@@ -63,6 +65,12 @@ export interface AgentEvent {
   output_tokens?: number;
   duration_ms?: number;
   num_turns?: number;
+  // agent_plan fields
+  steps?: string[];
+  // agent_summary fields
+  summary?: string;
+  files_produced?: string[];
+  key_decisions?: string[];
   timestamp: string;
 }
 
