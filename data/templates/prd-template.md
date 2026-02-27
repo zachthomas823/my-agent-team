@@ -1,57 +1,51 @@
 # Product Requirements Document: {Project Name}
 
-## Document Info
-- **Author**: Product Manager Agent
-- **Date**: {date}
-- **Status**: Draft | Review | Approved
+## 1. Problem Statement
+{What problem does this product solve? 2-3 sentences max.}
 
-## 1. Overview
-### Problem Statement
-{What problem does this product solve?}
-
-### Product Vision
-{One-paragraph vision for the product}
-
-### Success Metrics
+## 2. Success Metrics
 | Metric | Target | Measurement Method |
 |--------|--------|--------------------|
 | {metric} | {target} | {how measured} |
 
-## 2. User Personas
-### Persona 1: {Name}
-- **Role**: {role}
-- **Goals**: {what they want to achieve}
-- **Pain Points**: {current frustrations}
-- **Technical Proficiency**: Low | Medium | High
+## 3. User Roles
+| Role | Description | Key Needs |
+|------|-------------|-----------|
+| {role} | {who they are} | {what they need from this system} |
 
-## 3. Scope
+## 4. Scope
 ### In Scope (v1)
 - {feature}
 
-### Out of Scope (v1)
-- {feature deferred to later}
+### Out of Scope
+- {feature deferred}
 
-## 4. Functional Requirements
+## 5. Functional Requirements
 ### FR-001: {Feature Name}
-- **Description**: {what it does}
 - **Priority**: Must Have | Should Have | Nice to Have
+- **Description**: {what it does}
 - **Acceptance Criteria**:
   - [ ] {criterion}
 
-## 5. Non-Functional Requirements
-- **Performance**: {response time, throughput}
-- **Security**: {auth, data protection}
-- **Scalability**: {expected load}
-- **Accessibility**: {standards to meet}
+## 6. Non-Functional Requirements
+| Category | Requirement |
+|----------|-------------|
+| Performance | {requirement} |
+| Security | {requirement} |
 
-## 6. Dependencies & Assumptions
+## 7. Dependencies & Assumptions
 ### Dependencies
 - {dependency}
 
-### Assumptions
-- {assumption}
+### Assumptions (Requiring Validation)
+- {assumption} — **Validation**: {how to verify}
 
-## 7. Timeline
-| Phase | Deliverable | Target Date |
-|-------|-------------|-------------|
-| {phase} | {deliverable} | {date} |
+## 8. Divergences from Brief
+| Topic | Brief Said | PRD Says | Rationale |
+|-------|-----------|----------|-----------|
+| {topic} | {original} | {changed} | {why} |
+
+## 9. Assumptions Requiring Validation
+| # | Assumption | Impact if Wrong | Validation Method |
+|---|-----------|----------------|-------------------|
+| 1 | {assumption} | {what breaks} | {how to check} |
