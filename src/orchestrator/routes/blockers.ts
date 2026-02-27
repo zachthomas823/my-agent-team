@@ -88,6 +88,18 @@ export function registerBlockerRoutes(app: Express, deps: AppDeps): void {
         })
       );
 
+      // Re-dispatch agent with resolution context so it can resume work
+      const taskPayload = {
+        id: `task-${Date.now()}`,
+        project_id: blocker.project_id,
+        prompt: `Your blocker "${blocker.question}" has been resolved.\n\nResolution: ${resolution}${selected_option ? `\nSelected option: ${selected_option}` : ""}\n\nResume your work. Read your previous artifacts and handoff to understand where you left off.`,
+        phase: "directed" as const,
+      };
+      await redis.publish(
+        `tasks:${blocker.agent_id}`,
+        JSON.stringify(taskPayload)
+      );
+
       // Broadcast to dashboard clients
       broadcastToWss(wss, {
         type: "blocker_resolved",

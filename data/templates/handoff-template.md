@@ -1,24 +1,17 @@
-# Handoff: {Source Agent Role} → {Target Agent Role}
+# Handoff: {Source Role} → {Target Role}
 
-## Project: {Project Name}
-## Date: {ISO 8601 timestamp}
-## Status: READY_FOR_REVIEW
+## Files Produced
+- `{path}` — {one-line description}
 
-## Summary
-{Brief description of work completed and key outcomes}
+## Key Decisions
+1. {Decision}: {rationale in one sentence}
 
-## Artifacts Produced
-- `{relative/path/to/artifact}` — {description}
+## Open Questions
+1. {Question the next agent should consider or validate}
 
-## Key Decisions Made
-1. {Decision and rationale}
+## Contract Changes
+- {contract file changed or proposed, or "None"}
 
-## Open Questions for Next Agent
-1. {Question that the next agent should consider}
-
-## Blockers Requiring Human Input
-- NONE
-{or list block IDs and summaries}
-
-## Context for {Target Role}
-{Specific guidance for the next agent — what to read first, what to pay attention to, what assumptions were made}
+## Start By Reading
+1. {First file the next agent should read}
+2. {Second file}

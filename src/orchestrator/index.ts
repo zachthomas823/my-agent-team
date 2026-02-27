@@ -226,13 +226,15 @@ async function main() {
       case "blocker_created": {
         if (event.block_id && event.project_id) {
           db.prepare(
-            "INSERT OR REPLACE INTO blockers (id, project_id, agent_id, question, priority, status) VALUES (?, ?, ?, ?, ?, 'pending')"
+            "INSERT OR REPLACE INTO blockers (id, project_id, agent_id, question, context, priority, options, status) VALUES (?, ?, ?, ?, ?, ?, ?, 'pending')"
           ).run(
             event.block_id,
             event.project_id,
             event.agent_id,
             event.message || "No question provided",
-            "medium"
+            event.context || null,
+            event.priority || "medium",
+            event.options || null
           );
         }
         break;

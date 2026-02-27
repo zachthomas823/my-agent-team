@@ -57,6 +57,9 @@ export interface AgentEvent {
   message?: string;
   next_agent?: AgentRole;
   block_id?: string;
+  priority?: string;
+  context?: string;
+  options?: string;
   error?: string;
   tool?: string;
   result_summary?: string;

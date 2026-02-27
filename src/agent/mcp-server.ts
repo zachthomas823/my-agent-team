@@ -150,6 +150,8 @@ export function createAgentMcpServer(
               priority: args.priority,
               question: args.question,
               message: args.question,
+              context: args.context,
+              options: args.options ? JSON.stringify(args.options) : null,
               timestamp: new Date().toISOString(),
             })
           );

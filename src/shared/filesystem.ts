@@ -13,6 +13,8 @@ const PROJECT_SUBDIRS = [
   "conversations",
   "handoffs/blocks",
   "context",
+  "contracts",
+  "contracts/proposals",
 ];
 
 async function chmodRecursive(dirPath: string, mode: number): Promise<void> {
