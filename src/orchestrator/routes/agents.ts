@@ -71,6 +71,15 @@ export function registerAgentRoutes(app: Express, deps: AppDeps): void {
         }
       }
 
+      let lastEventData: Record<string, unknown> = {};
+      if (lastEvent) {
+        try {
+          lastEventData = JSON.parse(lastEvent.data);
+        } catch {
+          // ignore
+        }
+      }
+
       return {
         agent_id: agentId,
         role,
@@ -79,6 +88,12 @@ export function registerAgentRoutes(app: Express, deps: AppDeps): void {
           ? {
               type: lastEvent.event_type,
               created_at: lastEvent.created_at,
+              tool: lastEventData.tool ?? null,
+              message: lastEventData.message ?? null,
+              result_summary: lastEventData.result_summary ?? null,
+              error: lastEventData.error ?? null,
+              next_agent: lastEventData.next_agent ?? null,
+              project_id: lastEventData.project_id ?? null,
             }
           : null,
       };

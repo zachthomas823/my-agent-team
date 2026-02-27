@@ -17,6 +17,14 @@ if (!AGENT_ROLE || !AGENT_ID) {
   process.exit(1);
 }
 
+// If short-term STS credentials are injected (AWS_ACCESS_KEY_ID is set), unset AWS_PROFILE
+// so the AWS SDK doesn't try to resolve it via credential_process (saml2aws), which is not
+// available inside Docker containers.
+if (process.env.AWS_ACCESS_KEY_ID && process.env.AWS_PROFILE) {
+  console.log(`[${AGENT_ID}] Injected STS credentials detected — unsetting AWS_PROFILE to prevent credential_process chain`);
+  delete process.env.AWS_PROFILE;
+}
+
 async function main() {
   const config = getAgentConfig(AGENT_ROLE!);
   const redis = createClient({ url: REDIS_URL }) as RedisClientType;

@@ -1,0 +1,41 @@
+# docker-compose override for AWS Bedrock authentication.
+#
+# NOTE: This file is largely superseded. The base docker-compose.yml already:
+#   - Mounts ~/.aws into all containers (ro)
+#   - Passes AWS_ACCESS_KEY_ID / AWS_SECRET_ACCESS_KEY / AWS_SESSION_TOKEN through
+#
+# The ~/.aws mount alone is NOT sufficient when the AWS profile uses
+# credential_process (e.g. saml2aws), because saml2aws is not installed in the
+# Docker images. start.sh --bedrock resolves credentials on the host via
+# `aws configure export-credentials` and injects them as env vars instead.
+#
+# This override upgrades the mount to rw, which is only needed if a tool inside
+# the container writes to ~/.aws (uncommon). Used automatically by start.sh --bedrock.
+# Do not use directly — always go through start.sh.
+
+services:
+  # Orchestrator runs as root (no claude subprocess), so /root/.aws
+  orchestrator:
+    volumes:
+      - ${HOME}/.aws:/root/.aws:rw
+
+  # Agents run as the 'agent' user, so /home/agent/.aws
+  agent-analyst:
+    volumes:
+      - ${HOME}/.aws:/home/agent/.aws:rw
+
+  agent-pm:
+    volumes:
+      - ${HOME}/.aws:/home/agent/.aws:rw
+
+  agent-architect:
+    volumes:
+      - ${HOME}/.aws:/home/agent/.aws:rw
+
+  agent-developer:
+    volumes:
+      - ${HOME}/.aws:/home/agent/.aws:rw
+
+  agent-qa:
+    volumes:
+      - ${HOME}/.aws:/home/agent/.aws:rw

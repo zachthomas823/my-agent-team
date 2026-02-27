@@ -1,13 +1,19 @@
 import type { Express } from "express";
-import { initializeProjectDir } from "../../shared/filesystem.js";
+import multer from "multer";
+import { join } from "path";
+import { copyFile, unlink } from "fs/promises";
+import { initializeProjectDir, deleteProjectDir } from "../../shared/filesystem.js";
 import { getWorkflowState } from "../workflow.js";
 import type { AppDeps, ProjectRow, EventRow, CreateProjectBody } from "../types.js";
 
 export function registerProjectRoutes(app: Express, deps: AppDeps): void {
   const { db, redis, dataDir } = deps;
 
+  // Multer configured to stage uploads in OS temp dir; we move them after project dir is created
+  const upload = multer({ dest: "/tmp/agent-uploads/" });
+
   // Create a new project
-  app.post("/api/projects", async (req, res) => {
+  app.post("/api/projects", upload.array("context_files"), async (req, res) => {
     try {
       const { name, description } = req.body as CreateProjectBody;
       if (!name || !description) {
@@ -31,9 +37,25 @@ export function registerProjectRoutes(app: Express, deps: AppDeps): void {
       const projectDir = `${dataDir}/projects/${projectId}`;
       await initializeProjectDir(projectDir);
 
+      // Move any uploaded context files into the project's context/ directory
+      const uploadedFiles = (req.files as Express.Multer.File[]) ?? [];
+      for (const file of uploadedFiles) {
+        const dest = join(projectDir, "context", file.originalname);
+        await copyFile(file.path, dest);
+        await unlink(file.path);
+      }
+
       db.prepare(
         "INSERT INTO projects (id, name) VALUES (?, ?)"
       ).run(projectId, name);
+
+      // Build prompt — mention context files if any were uploaded
+      const contextNote =
+        uploadedFiles.length > 0
+          ? `\n\nThe user has provided ${uploadedFiles.length} context file(s) in /data/projects/${projectId}/context/:\n` +
+            uploadedFiles.map((f) => `  - ${f.originalname}`).join("\n") +
+            "\n\nRead these files before starting your analysis — they may contain requirements, existing designs, or other relevant background."
+          : "";
 
       // Assign first task to analyst
       await redis.publish(
@@ -41,12 +63,12 @@ export function registerProjectRoutes(app: Express, deps: AppDeps): void {
         JSON.stringify({
           id: `task-${Date.now()}`,
           project_id: projectId,
-          prompt: `Analyze this project idea and create a comprehensive project brief:\n\n${description}`,
+          prompt: `Analyze this project idea and create a comprehensive project brief:\n\n${description}${contextNote}`,
           phase: "analysis",
         })
       );
 
-      res.json({ id: projectId, status: "started" });
+      res.json({ id: projectId, status: "started", context_files: uploadedFiles.length });
     } catch (error) {
       console.error("Error creating project:", error);
       res.status(500).json({ error: "Failed to create project" });
@@ -74,6 +96,33 @@ export function registerProjectRoutes(app: Express, deps: AppDeps): void {
 
     const workflow = getWorkflowState(req.params.id, db);
     res.json({ ...project, workflow });
+  });
+
+  // Delete a project (DB rows + filesystem)
+  app.delete("/api/projects/:id", async (req, res) => {
+    try {
+      const project = db
+        .prepare("SELECT id FROM projects WHERE id = ?")
+        .get(req.params.id);
+      if (!project) {
+        res.status(404).json({ error: "Project not found" });
+        return;
+      }
+
+      // Remove DB rows
+      db.prepare("DELETE FROM events WHERE project_id = ?").run(req.params.id);
+      db.prepare("DELETE FROM blockers WHERE project_id = ?").run(req.params.id);
+      db.prepare("DELETE FROM cost_log WHERE project_id = ?").run(req.params.id);
+      db.prepare("DELETE FROM projects WHERE id = ?").run(req.params.id);
+
+      // Remove files
+      await deleteProjectDir(`${dataDir}/projects/${req.params.id}`);
+
+      res.json({ status: "deleted" });
+    } catch (error) {
+      console.error("Error deleting project:", error);
+      res.status(500).json({ error: "Failed to delete project" });
+    }
   });
 
   // Get event stream for a project

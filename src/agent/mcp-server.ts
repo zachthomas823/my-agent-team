@@ -59,6 +59,66 @@ export function createAgentMcpServer(
       ),
 
       tool(
+        "report_plan",
+        "Report your execution plan at the very start of a task. Call this before doing any other work. " +
+          "Provide an ordered list of steps you intend to take.",
+        {
+          steps: z
+            .array(z.string())
+            .describe("Ordered list of steps you plan to take (e.g. ['Read brief', 'Write PRD', 'Create epics'])"),
+        },
+        async (args) => {
+          await redis.publish(
+            "events:orchestrator",
+            JSON.stringify({
+              type: "agent_plan",
+              agent_id: agentId,
+              project_id: projectId,
+              steps: args.steps,
+              timestamp: new Date().toISOString(),
+            })
+          );
+          return {
+            content: [{ type: "text" as const, text: "Plan reported successfully" }],
+          };
+        }
+      ),
+
+      tool(
+        "report_summary",
+        "Report a structured summary of your completed work. Call this before calling notify_orchestrator " +
+          "with task_complete. Provide what you did, which files you produced, and key decisions made.",
+        {
+          summary: z.string().describe("A paragraph describing what you accomplished"),
+          files_produced: z
+            .array(z.string())
+            .optional()
+            .describe("List of artifact file paths you created or modified"),
+          key_decisions: z
+            .array(z.string())
+            .optional()
+            .describe("List of important decisions or trade-offs made during the work"),
+        },
+        async (args) => {
+          await redis.publish(
+            "events:orchestrator",
+            JSON.stringify({
+              type: "agent_summary",
+              agent_id: agentId,
+              project_id: projectId,
+              summary: args.summary,
+              files_produced: args.files_produced ?? [],
+              key_decisions: args.key_decisions ?? [],
+              timestamp: new Date().toISOString(),
+            })
+          );
+          return {
+            content: [{ type: "text" as const, text: "Summary reported successfully" }],
+          };
+        }
+      ),
+
+      tool(
         "create_blocker",
         "Create a blocker that requires human input. The orchestrator will " +
           "surface this in the dashboard. Only use when you genuinely cannot " +

@@ -27,16 +27,42 @@ export function useProjectEvents(projectId: string) {
   });
 }
 
+export function useDeleteProject() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => api.deleteProject(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["projects"] });
+    },
+  });
+}
+
+export function useSendAgentMessage() {
+  return useMutation({
+    mutationFn: ({
+      agentId,
+      message,
+      projectId,
+    }: {
+      agentId: string;
+      message: string;
+      projectId: string;
+    }) => api.sendAgentMessage(agentId, message, projectId),
+  });
+}
+
 export function useCreateProject() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: ({
       name,
       description,
+      contextFiles,
     }: {
       name: string;
       description: string;
-    }) => api.createProject(name, description),
+      contextFiles?: File[];
+    }) => api.createProject(name, description, contextFiles),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["projects"] });
     },

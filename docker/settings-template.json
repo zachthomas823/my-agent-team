@@ -1,0 +1,12 @@
+{
+  "env": {
+    "CLAUDE_CODE_USE_BEDROCK": "1",
+    "AWS_REGION": "us-east-1",
+    "ANTHROPIC_MODEL": "arn:aws:bedrock:us-east-1:508472680603:application-inference-profile/hwc542ndmw3d",
+    "ANTHROPIC_DEFAULT_OPUS_MODEL": "arn:aws:bedrock:us-east-1:508472680603:application-inference-profile/c3sehqc3ubhd",
+    "ANTHROPIC_DEFAULT_SONNET_MODEL": "arn:aws:bedrock:us-east-1:508472680603:application-inference-profile/hwc542ndmw3d",
+    "ANTHROPIC_DEFAULT_HAIKU_MODEL": "arn:aws:bedrock:us-east-1:508472680603:application-inference-profile/j0c2q0aa44jk",
+    "CLAUDE_CODE_SUBAGENT_MODEL": "arn:aws:bedrock:us-east-1:508472680603:application-inference-profile/hwc542ndmw3d"
+  },
+  "skipDangerousModePermissionPrompt": true
+}
